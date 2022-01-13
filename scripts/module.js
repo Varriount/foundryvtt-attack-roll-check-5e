@@ -53,11 +53,13 @@ class AttackRollCheck5e {
 
       const statusIcon = this._getStatusIcon({ hit, isCriticalHit, isCriticalMiss });
 
+      const resultDelta = result.total - ac > 0 ? `+${result.total - ac}` : result.total - ac;
+
       return `
             <li class="card-header" data-token-id="${token.id}">
               <img class="token-image" src="${token.data.img}" title="${token.data.name}" width="36" height="36" style="transform: rotate(${token.data.rotation ?? 0}deg);">
               <h3>${token.data.name}</h3>
-              <div class="roll-display">${result.total}</div>
+              <div class="roll-display">${resultDelta}</div>
               <div class="status-chip ${hit ? 'hit' : 'miss'}">
                 <span>${statusLabel}</span>
                 ${statusIcon}
@@ -72,9 +74,9 @@ class AttackRollCheck5e {
       whisper: ChatMessage.getWhisperRecipients('gm'),
       blind: true,
       user: game.user.data._id,
-      flags: {[this.MODULE_NAME]: { isResultCard: true }},
+      flags: { [this.MODULE_NAME]: { isResultCard: true } },
       type: CONST.CHAT_MESSAGE_TYPES.OTHER,
-      speaker: ChatMessage.getSpeaker({actor}),
+      speaker: ChatMessage.getSpeaker({ actor }),
       flavor: game.i18n.localize(`${this.MODULE_NAME}.MESSAGE_HEADER`),
       content: html,
     }
@@ -93,8 +95,10 @@ class AttackRollCheck5e {
     const ac = token.actor.data.data.attributes.ac.value;
     const d20 = roll.dice[0];
 
-    const isCriticalHit = (d20.faces === 20) && (d20.values.length === 1) && (d20.total >= (d20.options.critical ?? 20));
-    const isCriticalMiss = (d20.faces === 20) && (d20.values.length === 1) && (d20.total === 1);
+    console.log(roll)
+
+    const isCriticalHit = (d20.faces === 20) && (d20.values.length === 1) && (d20.total >= (d20.options.critical ?? 20) || roll.total >= ac + 10);
+    const isCriticalMiss = (d20.faces === 20) && (d20.values.length === 1) && (d20.total === 1 || roll.total <= ac - 10);
 
     const hit = !isCriticalMiss && (isCriticalHit || ac <= roll.total);
 
