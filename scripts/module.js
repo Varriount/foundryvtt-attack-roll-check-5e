@@ -95,8 +95,6 @@ class AttackRollCheck5e {
     const ac = token.actor.data.data.attributes.ac.value;
     const d20 = roll.dice[0];
 
-    console.log(roll)
-
     const isCriticalHit = (d20.faces === 20) && (d20.values.length === 1) && (d20.total >= (d20.options.critical ?? 20) || roll.total >= ac + 10);
     const isCriticalMiss = (d20.faces === 20) && (d20.values.length === 1) && (d20.total === 1 || roll.total <= ac - 10);
 
