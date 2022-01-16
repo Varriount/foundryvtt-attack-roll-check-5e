@@ -81,7 +81,7 @@ class AttackRollCheck5e {
       content: html,
     }
 
-    if (game.modules.get('dice-so-nice')?.active) {
+    if (game.modules.get('dice-so-nice')?.active && !game.settings.get('dice-so-nice', 'immediatelyDisplayChatMessages')) {
       Hooks.once('diceSoNiceRollComplete', () => {
         ChatMessage.create(messageData)
       })
