@@ -5,7 +5,7 @@ class AttackRollCheck5e {
   static init = async () => {
     console.log(`${this.MODULE_NAME} | Initializing ${this.MODULE_TITLE}`);
 
-    Hooks.on('Item5e.rollAttack', this._checkAttackRoll);
+    Hooks.on('Item5e.rollAttack', this._preCheckAttackRoll);
   }
 
   static _getStatusIcon = ({ hit, isCriticalHit, isCriticalMiss }) => {
@@ -30,7 +30,7 @@ class AttackRollCheck5e {
     }
   }
 
-  static _checkAttackRoll = (_item, result, _config, actor, { userId } = {}) => {
+  static _preCheckAttackRoll = (_item, result, _config, actor, { userId } = {}) => {
     // only do this for the user making the roll (Compatiblity with older versions of more-hooks-5e)
     if (!!userId && userId !== game.userId) return;
 
@@ -38,6 +38,40 @@ class AttackRollCheck5e {
       return;
     }
 
+    // some items might have templates to be placed
+    const itemHasTemplateFirst = _item.hasAreaTarget && game.user.can("TEMPLATE_CREATE") && canvas.activeLayer instanceof TemplateLayer;
+
+    // run the check after measured template is placed
+    if (itemHasTemplateFirst) {
+      console.log('waiting for template first!');
+
+      const callback = () => this._checkAttackRoll(_item, result, _config, actor);
+
+      Hooks.once('createMeasuredTemplate', callback);
+
+      const cancelBack = (controls) => {
+        if (controls.activeControl !== 'measure') {
+          Hooks.off('createMeasuredTemplate', callback);
+        }
+      }
+
+      // cleans up createMeasuredTemplate hook if the user cancels out of the measure template
+      // happens before createMeasuredTemplate sometimes
+      Hooks.once('renderSceneControls', cancelBack);
+
+      // always happens before renderSceneControls in cases where the user is actually placing a
+      // measured template
+      Hooks.once('preCreateMeasuredTemplate', () => {
+        Hooks.off('renderSceneControls', cancelBack);
+      });
+
+      return;
+    }
+
+    this._checkAttackRoll(_item, result, _config, actor);
+  }
+
+  static _checkAttackRoll(_item, result, _config, actor) {
     const targetedTokens = [...(game.user.targets?.values() ?? [])].filter(t => !!t.actor);
 
     if (!targetedTokens.length) {
