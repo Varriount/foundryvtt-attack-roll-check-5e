@@ -30,7 +30,7 @@ class AttackRollCheck5e {
     }
   }
 
-  static _preCheckAttackRoll = (item, result) => {
+  static _checkAttackRoll = (item, result) => {
     if (result.options?.rollMode === 'selfRoll') {
       return;
     }
