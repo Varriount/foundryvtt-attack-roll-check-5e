@@ -30,22 +30,19 @@ class AttackRollCheck5e {
     }
   }
 
-  static _preCheckAttackRoll = (_item, result, _config, actor, { userId } = {}) => {
-    // only do this for the user making the roll (Compatiblity with older versions of more-hooks-5e)
-    if (!!userId && userId !== game.userId) return;
-
+  static _preCheckAttackRoll = (item, result) => {
     if (result.options?.rollMode === 'selfRoll') {
       return;
     }
 
     // some items might have templates to be placed
-    const itemHasTemplateFirst = _item.hasAreaTarget && game.user.can("TEMPLATE_CREATE") && canvas.activeLayer instanceof TemplateLayer;
+    const itemHasTemplateFirst = item.hasAreaTarget && game.user.can("TEMPLATE_CREATE") && canvas.activeLayer instanceof TemplateLayer;
 
     // run the check after measured template is placed
     if (itemHasTemplateFirst) {
       console.log('waiting for template first!');
 
-      const callback = () => this._checkAttackRoll(_item, result, _config, actor);
+      const callback = () => this._checkAttackRoll(item, result);
 
       Hooks.once('createMeasuredTemplate', callback);
 
@@ -68,10 +65,10 @@ class AttackRollCheck5e {
       return;
     }
 
-    this._checkAttackRoll(_item, result, _config, actor);
+    this._checkAttackRoll(item, result);
   }
 
-  static _checkAttackRoll(_item, result, _config, actor) {
+  static _checkAttackRoll(item, result) {
     const targetedTokens = [...(game.user.targets?.values() ?? [])].filter(t => !!t.actor);
 
     if (!targetedTokens.length) {
@@ -110,7 +107,7 @@ class AttackRollCheck5e {
       user: game.user.data._id,
       flags: { [this.MODULE_NAME]: { isResultCard: true } },
       type: CONST.CHAT_MESSAGE_TYPES.OTHER,
-      speaker: ChatMessage.getSpeaker({ actor }),
+      speaker: ChatMessage.getSpeaker({actor: item.parent}),
       flavor: game.i18n.localize(`${this.MODULE_NAME}.MESSAGE_HEADER`),
       content: html,
     }
